@@ -1,10 +1,11 @@
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,32 +22,27 @@ public class Day7 {
 				}
 			});
 		
-		for(BagType type : types.values()) {
+		for(BagType type : types.values())
 			type.computeContents();
-//			type.validate();
-		}
 		
-		List<BagType> candidates = findCandidates(types.get("shiny gold"));
 		
-		System.out.println(candidates);
-		System.out.println("Candidates: " + candidates.size());
-//		
-//		List<String> colors = new ArrayList<>();
-//		for(BagType b : candidates)
-//			if(!colors.contains(b.color))
-//				colors.add(b.color);
-//		
-//		System.out.println(colors);
-//		System.out.println("Colors: " + colors.size());
+		BagType shinyGold = types.get("shiny gold");
+		// p1:
+//		Collection<BagType> candidates = findCandidates(shinyGold);
+//		System.out.println(candidates);
+//		System.out.println("Candidates: " + candidates.size());
+		
+		// p2:
+		System.out.println("Total bags: " + getTotalBags(shinyGold));
 	}
 	
-	private static List<BagType> findCandidates(BagType target) {
-		List<BagType> allCandidates = new ArrayList<>();
+	private static Collection<BagType> findCandidates(BagType target) {
+		Set<BagType> allCandidates = new HashSet<>();
 		
-		List<BagType> currentTests = new ArrayList<>();
-		List<BagType> nextTests = new ArrayList<>();
+		Set<BagType> currentTests = new HashSet<>();
+		Set<BagType> nextTests = new HashSet<>();
 		
-		nextTests.add(target);
+		currentTests.add(target);
 		
 		do {
 			for(BagType test : currentTests)
@@ -57,12 +53,20 @@ public class Day7 {
 			
 			allCandidates.addAll(currentTests);
 			currentTests = nextTests;
-			nextTests = new ArrayList<>();
+			nextTests = new HashSet<>();
 		} while(currentTests.size() > 0);
 		
 		allCandidates.remove(target);
-		
 		return allCandidates;
+	}
+	
+	private static int getTotalBags(BagType type) {
+		int total = 0;
+		
+		for(BagType next : type.contents.keySet())
+			total += type.contents.get(next) * (1 + getTotalBags(next));
+		
+		return total;
 	}
 	
 	private static class BagType {
@@ -72,7 +76,6 @@ public class Day7 {
 		final String src;
 		
 		String name;
-		String pattern, color;
 		String contentsStr;
 		
 		Map<BagType, Integer> contents = new LinkedHashMap<>();
@@ -89,10 +92,6 @@ public class Day7 {
 			
 			name = m.group(1).trim();
 			contentsStr = m.group(2).trim();
-			
-			String[] nameToks = name.split(" ");
-			pattern = nameToks[0];
-			color = nameToks[1];
 		}
 		
 		void computeContents() {
@@ -111,22 +110,6 @@ public class Day7 {
 				contents.put(bt, c);
 			}
 		}
-		
-//		// for debugging
-//		void validate() {
-//			String s = name + " bags contain";
-//			if(contents.isEmpty())
-//				s += " no other bags.";
-//			
-//			else for(BagType t : contents.keySet()) {
-//				int ct = contents.get(t);
-//				s += (" " + ct + " " + t.name + " bag" + (ct == 1 ? "," : "s,"));
-//			}
-//			s = s.replaceAll(",$", ".");
-//
-//			if(!s.equals(src))
-//				System.out.println(this + " is invalid -> " + contents);
-//		}
 		
 		@Override
 		public String toString() {
